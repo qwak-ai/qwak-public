@@ -2,7 +2,7 @@ name: modelbuilder
 channels:
   - conda-forge
 dependencies:
-  - pip
+  - nomkl
   - scikit-learn-intelex
   - numpy
   - pandas
