@@ -1,7 +1,12 @@
 version: 2
 updates:
-  # Maintain dependencies for GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/docker/base_images"
+  - package-ecosystem: "docker"
+    directory: "/docker/base-images"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    target-branch: "develop"
+    labels:
+      - "Docker dependencies"
+      - "triage-board"
+    reviewers:
+      - "GalRabin"
