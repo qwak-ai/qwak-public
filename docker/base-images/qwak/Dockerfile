@@ -1,9 +1,12 @@
-FROM bentoml/model-server:latest-py38
-ENV PYTHONDONTWRITEBYTECODE=true
+FROM bentoml/model-server:latest-py38-gpu
 
+# OS requirements
+# hadolint ignore=DL3008
 RUN apt-get --allow-releaseinfo-change update && apt-get install --no-install-recommends -y \
-  git=1:2.20.1-2+deb10u3 \
-  zip=3.0-11+b1 \
+  git \
+  zip \
   && rm -rf /var/lib/apt/lists/*
-COPY environment.yml /environment.yml
-RUN conda env create -f environment.yml
+
+# Conda env setup
+ENV PYTHONDONTWRITEBYTECODE=true
+RUN conda update conda
