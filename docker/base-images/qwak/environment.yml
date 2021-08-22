@@ -11,3 +11,4 @@ dependencies:
   - pip:
       - "--extra-index-url https://qwak:A3RX55aNSpE8dCV@qwak.jfrog.io/artifactory/api/pypi/qwak-staging-pypi/simple"
       - qwak-sdk
+      - bentoml
