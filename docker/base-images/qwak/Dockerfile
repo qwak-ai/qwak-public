@@ -1,4 +1,4 @@
-FROM bentoml/model-server:latest-py38-gpu
+FROM bentoml/model-server:latest-py38
 
 # OS requirements
 # hadolint ignore=DL3008
