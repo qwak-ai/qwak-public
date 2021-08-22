@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directory: "/docker/base-images"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+    labels:
+      - "Docker dependencies"
+      - "triage-board"
+    reviewers:
+      - "GalRabin"
