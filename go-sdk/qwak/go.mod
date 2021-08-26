@@ -1,4 +1,4 @@
-module github.com/qwak-ai/qwak-platform/go-sdk/qwak
+module github.com/qwak-ai/qwak-public/go-sdk/qwak
 
 go 1.15
 
