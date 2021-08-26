@@ -1,4 +1,4 @@
-module qwak.ai/inference-sdk
+module github.com/qwak-ai/qwak-platform/go-sdk/qwak
 
 go 1.15
 

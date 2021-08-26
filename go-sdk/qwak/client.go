@@ -4,18 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"qwak.ai/inference-sdk/authentication"
-	"qwak.ai/inference-sdk/http"
+	"github.com/qwak-ai/qwak-platform/go-sdk/qwak/authentication"
+	"github.com/qwak-ai/qwak-platform/go-sdk/qwak/http"
 )
 
 const (
-	PREDICTION_PATH_URL_TEMPLATE = "/v1/%s/predict"
-	PREDICTION_BASE_URL_TEMPLATE = "https://models.%s.qwak.ai"
+	PredictionPathUrlTemplate = "/v1/%s/predict"
+	PredictionBaseUrlTemplate = "https://models.%s.qwak.ai"
 )
 
-type QwakRealTimeClient struct {
+type RealTimeClient struct {
 	authenticator *authentication.Authenticator
-	httpClient    http.HttpClient
+	httpClient    http.Client
 	environment   string
 	context       context.Context
 }
@@ -24,10 +24,10 @@ type RealTimeClientConfig struct {
 	ApiKey      string
 	Environment string
 	Context     context.Context
-	HttpClient  http.HttpClient
+	HttpClient  http.Client
 }
 
-func NewRealTimeClient(options RealTimeClientConfig) (RealTimeClient, error) {
+func NewRealTimeClient(options RealTimeClientConfig) (*RealTimeClient, error) {
 
 	if len(options.ApiKey) == 0 {
 		return nil, errors.New("api key is missing")
@@ -45,10 +45,10 @@ func NewRealTimeClient(options RealTimeClientConfig) (RealTimeClient, error) {
 		options.HttpClient = http.GetDefaultHttpClient()
 	}
 
-	return &QwakRealTimeClient{
+	return &RealTimeClient{
 		authenticator: authentication.NewAuthenticator(&authentication.AuthenticatorOptions{
-			ApiKey: options.ApiKey,
-			Ctx:    options.Context,
+			ApiKey:     options.ApiKey,
+			Ctx:        options.Context,
 			HttpClient: options.HttpClient,
 		}),
 		httpClient:  options.HttpClient,
@@ -57,14 +57,13 @@ func NewRealTimeClient(options RealTimeClientConfig) (RealTimeClient, error) {
 	}, nil
 }
 
-
 func getPredictionUrl(environment string, modelId string) string {
-	return fmt.Sprintf(PREDICTION_BASE_URL_TEMPLATE, environment) +
-		fmt.Sprintf(PREDICTION_PATH_URL_TEMPLATE, modelId)
+	return fmt.Sprintf(PredictionBaseUrlTemplate, environment) +
+		fmt.Sprintf(PredictionPathUrlTemplate, modelId)
 }
 
-func (c *QwakRealTimeClient) Predict(predictionRequst *PredictionRequest) (*PredictionResponse, error) {
-	if len(predictionRequst.ModelId) == 0 {
+func (c *RealTimeClient) Predict(predictionRequest *PredictionRequest) (*PredictionResponse, error) {
+	if len(predictionRequest.ModelId) == 0 {
 		return nil, errors.New("model id is missing in request")
 	}
 
@@ -74,8 +73,8 @@ func (c *QwakRealTimeClient) Predict(predictionRequst *PredictionRequest) (*Pred
 		return nil, fmt.Errorf("qwak client failed to predict: %s", err.Error())
 	}
 
-	pandaOrientedDf := predictionRequst.asPandaOrientedDf()
-	predictionUrl := getPredictionUrl(c.environment, predictionRequst.ModelId)
+	pandaOrientedDf := predictionRequest.asPandaOrientedDf()
+	predictionUrl := getPredictionUrl(c.environment, predictionRequest.ModelId)
 	request, err := http.GetPredictionRequest(c.context, predictionUrl, token, pandaOrientedDf)
 
 	if err != nil {

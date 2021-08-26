@@ -2,20 +2,19 @@ package it_test
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"testing"
 
+	"github.com/qwak-ai/qwak-platform/go-sdk/qwak"
+	qwakhttp "github.com/qwak-ai/qwak-platform/go-sdk/qwak/http"
+	"github.com/qwak-ai/qwak-platform/go-sdk/qwak/test/it"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	qwak "qwak.ai/inference-sdk"
-	qwakhttp "qwak.ai/inference-sdk/http"
-	"qwak.ai/inference-sdk/test/it"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
-	realTimeClient qwak.RealTimeClient
+	realTimeClient *qwak.RealTimeClient
 	ctx            context.Context
 	ApiKey         string
 	Environment    string
@@ -28,23 +27,24 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.ctx = context.Background()
-	s.ApiKey = "6abc183a174c7991d3473f684635b62b@b5a414c542e94c629a8ba28fd4c63d2d"
+	s.ApiKey = "jwt-token"
 
 }
 
 func (s *IntegrationTestSuite) TestPredict() {
-	s.givenRealClient()
-	_, err := qwakhttp.GetAuthenticationRequest(s.ctx, s.ApiKey)
-
-	if err != nil {
-		s.Assertions.Fail(fmt.Sprintf("faile create request: %s", err.Error()))
-	}
+	// Given
+	s.givenQwakClientWithMockedHttpClient()
 
 	s.HttpMock.On("Do", mock.MatchedBy(func(req *http.Request) bool {
-		fmt.Println(req.URL.String(), qwakhttp.DEFAULT_AUTH_ENDPOINT_URI)
-		return req.URL.String() == qwakhttp.DEFAULT_AUTH_ENDPOINT_URI
-	})).Return("hi", nil).Once()
+		return req.URL.String() == qwakhttp.DefaultAuthEndpointUri
+	})).Return(it.GetHttpReponse(it.GetAuthResponseWithLongExpiration(), 200), nil).Once()
 
+	s.HttpMock.On("Do", mock.MatchedBy(func(req *http.Request) bool {
+		return req.URL.String() == "https://models.donald.qwak.ai/v1/otf/predict" &&
+			req.Header.Get("authorization") == "Bearer jwt-token"
+	})).Return(it.GetHttpReponse(it.GetPredictionResult(), 200), nil).Once()
+
+	// When
 	predictionRequest := qwak.NewPredictionRequest("otf").AddFeatureVector(
 		qwak.NewFeatureVector().
 			WithFeature("State", "PPP").
@@ -66,27 +66,159 @@ func (s *IntegrationTestSuite) TestPredict() {
 	)
 
 	response, err := s.realTimeClient.Predict(predictionRequest)
+
+	// Then
 	s.Assert().Equal(nil, err)
 	value, err := response.GetSinglePrediction().GetValueAsInt("churn")
 	s.Assert().Equal(nil, err)
 	s.Assert().Equal(1, value)
-
-	fmt.Println(response)
+	s.HttpMock.Mock.AssertExpectations(s.T())
 }
 
-func (s *IntegrationTestSuite) givenRealClient() {
-	client, err := qwak.NewRealTimeClient(qwak.RealTimeClientConfig{
-		ApiKey:      s.ApiKey,
-		Environment: "donald",
-		Context:     s.ctx,
-	})
+func (s *IntegrationTestSuite) TestAuthenticationOnlyOnceForToken() {
+	// Given
+	s.givenQwakClientWithMockedHttpClient()
 
-	if err != nil {
-		s.Assert().Fail("client init failed", err)
-	}
+	s.HttpMock.On("Do", mock.MatchedBy(func(req *http.Request) bool {
+		return req.URL.String() == qwakhttp.DefaultAuthEndpointUri
+	})).Return(it.GetHttpReponse(it.GetAuthResponseWithLongExpiration(), 200), nil).Once()
 
-	s.realTimeClient = client
+	s.HttpMock.On("Do", mock.MatchedBy(func(req *http.Request) bool {
+		return req.URL.String() == "https://models.donald.qwak.ai/v1/otf/predict" &&
+			req.Header.Get("authorization") == "Bearer jwt-token"
+	})).Return(it.GetHttpReponse(it.GetPredictionResult(), 200), nil).Times(3)
+
+	// When
+	predictionRequest := qwak.NewPredictionRequest("otf").AddFeatureVector(
+		qwak.NewFeatureVector().
+			WithFeature("State", "PPP"),
+	)
+
+	s.realTimeClient.Predict(predictionRequest)
+	s.realTimeClient.Predict(predictionRequest)
+	s.realTimeClient.Predict(predictionRequest)
+
+	// Then
+	s.HttpMock.Mock.AssertExpectations(s.T())
 }
+
+func (s *IntegrationTestSuite) TestAuthenticationRefreshWhenExpired() {
+	// Given
+	s.givenQwakClientWithMockedHttpClient()
+
+	// Auth requests
+	s.HttpMock.On("Do", mock.MatchedBy(func(req *http.Request) bool {
+		return req.URL.String() == qwakhttp.DefaultAuthEndpointUri
+	})).Once().Return(it.GetHttpReponse(it.GetAuthResponseWithExpiredDate(), 200), nil).
+		On("Do", mock.MatchedBy(func(req *http.Request) bool {
+			return req.URL.String() == qwakhttp.DefaultAuthEndpointUri
+		})).Once().Return(it.GetHttpReponse(it.GetAuthResponseWithExpiredDate(), 200), nil).
+		On("Do", mock.MatchedBy(func(req *http.Request) bool {
+			return req.URL.String() == qwakhttp.DefaultAuthEndpointUri
+		})).Once().Return(it.GetHttpReponse(it.GetAuthResponseWithExpiredDate(), 200), nil)
+
+	// Predict requests
+	s.HttpMock.On("Do", mock.MatchedBy(func(req *http.Request) bool {
+
+		return req.URL.String() == "https://models.donald.qwak.ai/v1/otf/predict" &&
+			req.Header.Get("Authorization") == "Bearer jwt-token"
+	})).Return(it.GetHttpReponse(it.GetPredictionResult(), 200), nil).Once()
+
+	s.HttpMock.On("Do", mock.MatchedBy(func(req *http.Request) bool {
+
+		return req.URL.String() == "https://models.donald.qwak.ai/v1/otf/predict" &&
+			req.Header.Get("Authorization") == "Bearer jwt-token"
+	})).Return(it.GetHttpReponse(it.GetPredictionResult(), 200), nil).Once()
+
+	s.HttpMock.On("Do", mock.MatchedBy(func(req *http.Request) bool {
+
+		return req.URL.String() == "https://models.donald.qwak.ai/v1/otf/predict" &&
+			req.Header.Get("Authorization") == "Bearer jwt-token"
+	})).Return(it.GetHttpReponse(it.GetPredictionResult(), 200), nil).Once()
+
+	// When
+	predictionRequest := qwak.NewPredictionRequest("otf").AddFeatureVector(
+		qwak.NewFeatureVector().
+			WithFeature("State", "PPP"),
+	)
+
+	s.realTimeClient.Predict(predictionRequest)
+	s.realTimeClient.Predict(predictionRequest)
+	s.realTimeClient.Predict(predictionRequest)
+
+	// Then
+	s.HttpMock.Mock.AssertExpectations(s.T())
+}
+
+func (s *IntegrationTestSuite) TestRetryOnFailure() {
+	// Given
+	s.givenQwakClientWithMockedHttpClient()
+
+	s.HttpMock.On("Do", mock.MatchedBy(func(req *http.Request) bool {
+		return req.URL.String() == qwakhttp.DefaultAuthEndpointUri
+	})).Return(it.GetHttpReponse(it.GetAuthResponseWithLongExpiration(), 503), nil).Once()
+
+	s.HttpMock.On("Do", mock.MatchedBy(func(req *http.Request) bool {
+		return req.URL.String() == qwakhttp.DefaultAuthEndpointUri
+	})).Return(it.GetHttpReponse(it.GetAuthResponseWithLongExpiration(), 503), nil).Once()
+
+	s.HttpMock.On("Do", mock.MatchedBy(func(req *http.Request) bool {
+		return req.URL.String() == qwakhttp.DefaultAuthEndpointUri
+	})).Return(it.GetHttpReponse(it.GetAuthResponseWithLongExpiration(), 200), nil).Once()
+
+	s.HttpMock.On("Do", mock.MatchedBy(func(req *http.Request) bool {
+		return req.URL.String() == "https://models.donald.qwak.ai/v1/otf/predict" &&
+			req.Header.Get("authorization") == "Bearer jwt-token"
+	})).Return(it.GetHttpReponse(it.GetPredictionResult(), 200), nil).Times(3)
+
+	// When
+	predictionRequest := qwak.NewPredictionRequest("otf").AddFeatureVector(
+		qwak.NewFeatureVector().
+			WithFeature("State", "PPP"),
+	)
+
+	s.realTimeClient.Predict(predictionRequest)
+	s.realTimeClient.Predict(predictionRequest)
+	s.realTimeClient.Predict(predictionRequest)
+
+	// Then
+	s.HttpMock.Mock.AssertExpectations(s.T())
+}
+
+func (s *IntegrationTestSuite) TestAuthFailed() {
+	// Given
+	s.givenQwakClientWithMockedHttpClient()
+
+	s.HttpMock.On("Do", mock.MatchedBy(func(req *http.Request) bool {
+		return req.URL.String() == qwakhttp.DefaultAuthEndpointUri
+	})).Return(it.GetHttpReponse(it.GetAuthResponseWithLongExpiration(), 401), nil).Once()
+
+	// When
+	predictionRequest := qwak.NewPredictionRequest("otf").AddFeatureVector(
+		qwak.NewFeatureVector().
+			WithFeature("State", "PPP"),
+	)
+
+	_, err := s.realTimeClient.Predict(predictionRequest)
+
+	// Then
+	s.Assert().NotEqual(nil, err)
+	s.HttpMock.Mock.AssertExpectations(s.T())
+}
+
+//func (s *IntegrationTestSuite) givenRealClient() {
+//	client, err := qwak.NewRealTimeClient(qwak.RealTimeClientConfig{
+//		ApiKey:      s.ApiKey,
+//		Environment: "donald",
+//		Context:     s.ctx,
+//	})
+//
+//	if err != nil {
+//		s.Assert().Fail("client init failed", err)
+//	}
+//
+//	s.realTimeClient = client
+//}
 
 func (s *IntegrationTestSuite) givenQwakClientWithMockedHttpClient() {
 	client, err := qwak.NewRealTimeClient(qwak.RealTimeClientConfig{
@@ -102,12 +234,6 @@ func (s *IntegrationTestSuite) givenQwakClientWithMockedHttpClient() {
 
 	s.realTimeClient = client
 }
-
-// func getAuthReponse() *http.Response {
-// 	return &http.Response{
-// 		Body: ,
-// 	}
-// }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
 }

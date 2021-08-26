@@ -5,32 +5,27 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"qwak.ai/inference-sdk/http"
-	"sync"
+	"github.com/qwak-ai/qwak-platform/go-sdk/qwak/http"
 	"time"
 )
 
 const (
-	TOKEN_EXPIRATION_BUFFER = 30 * time.Minute
+	TokenExpirationBuffer = 30 * time.Minute
 )
 
 type Authenticator struct {
-	parentCtx         context.Context
-	ctx               context.Context
-	cancelContext     context.CancelFunc
-	runingStateLocker sync.Locker
-	apiKey            string
-	ruunning          bool
-	tokenWrapper      tokenWrapper
-	runtimeAuthError  error
-	httpClient        http.HttpClient
+	parentCtx     context.Context
+	ctx           context.Context
+	cancelContext context.CancelFunc
+	apiKey        string
+	tokenWrapper  tokenWrapper
+	httpClient    http.Client
 }
-
 
 type AuthenticatorOptions struct {
 	Ctx        context.Context
 	ApiKey     string
-	HttpClient http.HttpClient
+	HttpClient http.Client
 }
 
 type authResponse struct {
@@ -43,24 +38,21 @@ type tokenWrapper struct {
 	expiredAt   time.Time
 }
 
-func NewAuthenticator(options *AuthenticatorOptions) (*Authenticator) {
+func NewAuthenticator(options *AuthenticatorOptions) *Authenticator {
 	ctx, cancel := context.WithCancel(options.Ctx)
 	authenticator := &Authenticator{
-		ruunning:          false,
-		runingStateLocker: &sync.Mutex{},
-		parentCtx:         options.Ctx,
-		ctx: ctx,
+		parentCtx:     options.Ctx,
+		ctx:           ctx,
 		cancelContext: cancel,
-		runtimeAuthError:  nil,
-		httpClient:        options.HttpClient,
-		apiKey: options.ApiKey,
+		httpClient:    options.HttpClient,
+		apiKey:        options.ApiKey,
 	}
 
 	return authenticator
 }
 
 func (a *Authenticator) GetToken() (string, error) {
-	if a.getDurationForNextAuth() > 0 {
+	if a.getDurationForNextAuth() <= 0 {
 		err := a.renewToken()
 
 		if err != nil {
@@ -73,7 +65,12 @@ func (a *Authenticator) GetToken() (string, error) {
 
 func (a *Authenticator) getDurationForNextAuth() time.Duration {
 	now := time.Now()
-	nextAuthIn := a.tokenWrapper.expiredAt.Sub(now) - (TOKEN_EXPIRATION_BUFFER)
+
+	if a.tokenWrapper.expiredAt.Unix() == (time.Time{}).Unix() {
+		return 0
+	}
+
+	nextAuthIn := a.tokenWrapper.expiredAt.Sub(now) - (TokenExpirationBuffer)
 
 	if nextAuthIn < 0 {
 		return 0
@@ -87,7 +84,6 @@ func (a *Authenticator) renewToken() error {
 	tokenResponse, err := a.makeTokenRequest(a.apiKey)
 
 	if err != nil {
-		a.runtimeAuthError = err
 		return err
 	}
 
@@ -107,7 +103,6 @@ func (a *Authenticator) makeTokenRequest(apiKey string) (authResponse, error) {
 	if err != nil {
 		return decodedResponse, err
 	}
-
 	body, statusCode, err := http.DoRequestWithRetry(a.httpClient, request)
 
 	if err != nil {

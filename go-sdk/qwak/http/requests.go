@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"net/http"
 	"fmt"
+	"net/http"
 )
 
 const (
-	AUTH_REQUEST_CONTENT_TYPE = "application/json"
-	BEARER_TOKEN_TEMPLATE = "Bearer %s"
-	DEFAULT_AUTH_ENDPOINT_URI = "https://grpc.qwak.ai/api/v1/authentication/qwak-api-key"
+	AuthRequestContentType    = "application/json"
+	BearerTokenTemplate    = "Bearer %s"
+	DefaultAuthEndpointUri = "https://grpc.qwak.ai/api/v1/authentication/qwak-api-key"
 )
 
 type AuthenticationBody struct {
@@ -49,7 +49,7 @@ func getPostRequest(ctx context.Context, url string, requestBody []byte) (*http.
 		return nil, err
 	}
 
-	request.Header.Set("content-type", AUTH_REQUEST_CONTENT_TYPE)
+	request.Header.Set("content-type", AuthRequestContentType)
 
 	return request, nil
 }
@@ -59,7 +59,7 @@ func GetAuthenticationRequest(ctx context.Context, apiKey string) (*http.Request
 		ApiKey: apiKey,
 	})
 
-	return getPostRequest(ctx, DEFAULT_AUTH_ENDPOINT_URI, postBody)
+	return getPostRequest(ctx, DefaultAuthEndpointUri, postBody)
 
 }
 
@@ -67,11 +67,11 @@ func GetPredictionRequest(ctx context.Context, url string,  token string, dataFr
 	postBody, _ := json.Marshal(dataFrame)
 	request, err := getPostRequest(ctx, url, postBody)
 
-	if (err != nil) {
+	if err != nil {
 		return nil, err
 	}
 
-	request.Header.Set("authorization", fmt.Sprintf(BEARER_TOKEN_TEMPLATE, token))
+	request.Header.Set("authorization", fmt.Sprintf(BearerTokenTemplate, token))
 
 	return request, nil
 

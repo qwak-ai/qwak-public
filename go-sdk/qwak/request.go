@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"qwak.ai/inference-sdk/http"
+	"github.com/qwak-ai/qwak-platform/go-sdk/qwak/http"
 )
 
 type PredictionRequest struct {
@@ -80,7 +80,7 @@ func (pr *PredictionResponse) GetSinglePrediction() *PredictionResult {
 
 func responseFromRaw(results []byte) (*PredictionResponse, error) {
 
-	response := []map[string]interface{}{}
+	var response []map[string]interface{}
 	err := json.Unmarshal(results, &response)
 
 	if err != nil {
@@ -158,16 +158,14 @@ func NewFeatureVector() *FeatureVector {
 	return &FeatureVector{}
 }
 
-func (fr *FeatureVector) WithFeature(name string, value interface{}) (*FeatureVector) {
+func (fr *FeatureVector) WithFeature(name string, value interface{}) *FeatureVector {
 	fr.features = append(fr.features, &Feature{
-		Name: name,
+		Name:  name,
 		Value: value,
 	})
 
 	return fr
 }
-
-
 
 type Feature struct {
 	Name  string
