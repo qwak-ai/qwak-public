@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/qwak-ai/qwak-platform/go-sdk/qwak/http"
+	"github.com/qwak-ai/qwak-public/go-sdk/qwak/http"
 )
 
 type PredictionRequest struct {

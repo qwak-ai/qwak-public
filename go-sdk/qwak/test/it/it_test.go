@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/qwak-ai/qwak-platform/go-sdk/qwak"
-	qwakhttp "github.com/qwak-ai/qwak-platform/go-sdk/qwak/http"
-	"github.com/qwak-ai/qwak-platform/go-sdk/qwak/test/it"
+	"github.com/qwak-ai/qwak-public/go-sdk/qwak"
+	qwakhttp "github.com/qwak-ai/qwak-public/go-sdk/qwak/http"
+	"github.com/qwak-ai/qwak-public/go-sdk/qwak/test/it"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )

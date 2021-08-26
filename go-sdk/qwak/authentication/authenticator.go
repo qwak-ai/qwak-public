@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/qwak-ai/qwak-platform/go-sdk/qwak/http"
 	"time"
+
+	"github.com/qwak-ai/qwak-public/go-sdk/qwak/http"
 )
 
 const (

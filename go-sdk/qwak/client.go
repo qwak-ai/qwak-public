@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/qwak-ai/qwak-platform/go-sdk/qwak/authentication"
-	"github.com/qwak-ai/qwak-platform/go-sdk/qwak/http"
+
+	"github.com/qwak-ai/qwak-public/go-sdk/qwak/authentication"
+	"github.com/qwak-ai/qwak-public/go-sdk/qwak/http"
 )
 
 const (
