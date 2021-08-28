@@ -44,13 +44,13 @@ func DoRequest(client Client, request *http.Request) (responseBody []byte, httpC
 func DoRequestWithRetry(client Client, request *http.Request) (responseBody []byte, statusCode int, err error) {
 	retryAttempt := 0
 	lastHttpCode := 500
-	var lastErr error = nil
-	var body []byte = nil
+	var lastErr error
+	var body []byte
 
 	for retryAttempt < MaximumRetryAttempts && lastHttpCode >= 500 && lastErr == nil {
 		body, lastHttpCode, lastErr = DoRequest(client, request)
 
-		if lastHttpCode >= 500 && err == nil {
+		if lastHttpCode >= 500 || err == nil {
 			time.Sleep(RetryDelay * time.Duration(int(math.Pow(2, float64(retryAttempt)))))
 		}
 	}

@@ -206,20 +206,6 @@ func (s *IntegrationTestSuite) TestAuthFailed() {
 	s.HttpMock.Mock.AssertExpectations(s.T())
 }
 
-//func (s *IntegrationTestSuite) givenRealClient() {
-//	client, err := qwak.NewRealTimeClient(qwak.RealTimeClientConfig{
-//		ApiKey:      s.ApiKey,
-//		Environment: "donald",
-//		Context:     s.ctx,
-//	})
-//
-//	if err != nil {
-//		s.Assert().Fail("client init failed", err)
-//	}
-//
-//	s.realTimeClient = client
-//}
-
 func (s *IntegrationTestSuite) givenQwakClientWithMockedHttpClient() {
 	client, err := qwak.NewRealTimeClient(qwak.RealTimeClientConfig{
 		ApiKey:      s.ApiKey,
@@ -233,13 +219,4 @@ func (s *IntegrationTestSuite) givenQwakClientWithMockedHttpClient() {
 	}
 
 	s.realTimeClient = client
-}
-
-func (s *IntegrationTestSuite) TearDownSuite() {
-}
-
-func (s *IntegrationTestSuite) SetupTest() {
-}
-
-func (s *IntegrationTestSuite) TearDownTest() {
 }

@@ -8,20 +8,25 @@ import (
 	"github.com/qwak-ai/qwak-public/go-sdk/qwak/http"
 )
 
+// PredictionRequest represents is a fluent API to build a prediction request on your model
 type PredictionRequest struct {
 	ModelId        string
 	featuresVector []*FeatureVector
 }
 
+// NewPredictionRequest is a constructor of PredictionRequest fluent API
 func NewPredictionRequest(modelId string) *PredictionRequest {
 	return &PredictionRequest{ModelId: modelId}
 }
 
+// AddFeaturesVector adding a new feature vector to your prediction request using fluent API
 func (ir *PredictionRequest) AddFeatureVector(featureVector *FeatureVector) *PredictionRequest {
 	ir.featuresVector = append(ir.featuresVector, featureVector)
 	return ir
 }
-func (ir *PredictionRequest) AddFeaturesVector(featuresVector ...*FeatureVector) *PredictionRequest {
+
+// AddFeaturesVectors adding many new feature vector to your prediction request using fluent API
+func (ir *PredictionRequest) AddFeatureVectors(featuresVector ...*FeatureVector) *PredictionRequest {
 	ir.featuresVector = append(ir.featuresVector, featuresVector...)
 	return ir
 }
@@ -62,14 +67,17 @@ func (ir *PredictionRequest) asPandaOrientedDf() http.PandaOrientedDf {
 	return http.NewPandaOrientedDf(columnsNames, index, columnsData)
 }
 
+// PredictionResponse represnt a response from your model to a prediction request
 type PredictionResponse struct {
 	predictions []*PredictionResult
 }
 
+// GetPredictions is getting a resluts array from response
 func (pr *PredictionResponse) GetPredictions() []*PredictionResult {
 	return pr.predictions
 }
 
+// GetSinglePrediction returns a single result from a prediction response
 func (pr *PredictionResponse) GetSinglePrediction() *PredictionResult {
 	if len(pr.predictions) > 0 {
 		return pr.predictions[0]
@@ -98,10 +106,13 @@ func responseFromRaw(results []byte) (*PredictionResponse, error) {
 	return predictionResponse, nil
 }
 
+// PredictionResult respresnts one result in a response for prediction request
 type PredictionResult struct {
 	valuesMap map[string]interface{}
 }
 
+// GetValueAsInt returning the value of column in a result converted to int.
+// If convertion failed, an error returned
 func (pr *PredictionResult) GetValueAsInt(columnName string) (int, error) {
 	value, ok := pr.valuesMap[columnName]
 
@@ -118,6 +129,8 @@ func (pr *PredictionResult) GetValueAsInt(columnName string) (int, error) {
 	return int(parsedValue), nil
 }
 
+// GetValueAsInt returning the value of column in a result converted to float.
+// If convertion failed, an error returned
 func (pr *PredictionResult) GetValueAsFloat(columnName string) (float64, error) {
 	value, ok := pr.valuesMap[columnName]
 
@@ -134,6 +147,8 @@ func (pr *PredictionResult) GetValueAsFloat(columnName string) (float64, error) 
 	return parsedValue, nil
 }
 
+// GetValueAsInt returning the value of column in a result converted to string.
+// If convertion failed, an error returned
 func (pr *PredictionResult) GetValueAsString(columnName string) (string, error) {
 	value, ok := pr.valuesMap[columnName]
 
@@ -150,16 +165,19 @@ func (pr *PredictionResult) GetValueAsString(columnName string) (string, error) 
 	return parsedValue, nil
 }
 
+// FeatureVector represnts a vector of features with their name and value
 type FeatureVector struct {
-	features []*Feature
+	features []*feature
 }
 
+// NewFeatureVector is a constructor for FeatureVector with fluent API
 func NewFeatureVector() *FeatureVector {
 	return &FeatureVector{}
 }
 
+// WithFeature set a feature on a FeatureVector
 func (fr *FeatureVector) WithFeature(name string, value interface{}) *FeatureVector {
-	fr.features = append(fr.features, &Feature{
+	fr.features = append(fr.features, &feature{
 		Name:  name,
 		Value: value,
 	})
@@ -167,7 +185,7 @@ func (fr *FeatureVector) WithFeature(name string, value interface{}) *FeatureVec
 	return fr
 }
 
-type Feature struct {
+type feature struct {
 	Name  string
 	Value interface{}
 }

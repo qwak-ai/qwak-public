@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/qwak-ai/qwak-public/go-sdk/qwak/authentication"
 	"github.com/qwak-ai/qwak-public/go-sdk/qwak/http"
 )
@@ -14,6 +13,7 @@ const (
 	PredictionBaseUrlTemplate = "https://models.%s.qwak.ai"
 )
 
+// RealTimeClient is a client using to inference Qwak models
 type RealTimeClient struct {
 	authenticator *authentication.Authenticator
 	httpClient    http.Client
@@ -21,6 +21,7 @@ type RealTimeClient struct {
 	context       context.Context
 }
 
+// RealTimeClientConfig a set of configuration for the RealTimeClient
 type RealTimeClientConfig struct {
 	ApiKey      string
 	Environment string
@@ -28,6 +29,7 @@ type RealTimeClientConfig struct {
 	HttpClient  http.Client
 }
 
+// NewRealTimeClient is a constructor to initiate a RealTimeClient using to model predictions
 func NewRealTimeClient(options RealTimeClientConfig) (*RealTimeClient, error) {
 
 	if len(options.ApiKey) == 0 {
@@ -63,6 +65,7 @@ func getPredictionUrl(environment string, modelId string) string {
 		fmt.Sprintf(PredictionPathUrlTemplate, modelId)
 }
 
+// Predict using to perform an inference on your models hosting in Qwak
 func (c *RealTimeClient) Predict(predictionRequest *PredictionRequest) (*PredictionResponse, error) {
 	if len(predictionRequest.ModelId) == 0 {
 		return nil, errors.New("model id is missing in request")
