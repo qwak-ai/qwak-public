@@ -38,8 +38,9 @@ jobs:
           context: ./docker/base-images/qwak/
           file: ./docker/base-images/qwak/Dockerfile
           push: true
-          tags: galrabin/qwak:${{ env.QWAK-VERSION }}-py38-gpu,galrabin/qwak:latest-py38
-
+          tags: qwakai/qwak:${{ env.QWAK-VERSION }}-py38
+          
+          
   docker-qwak-gpu-base:
     runs-on: ubuntu-latest
     env:
@@ -62,7 +63,7 @@ jobs:
           context: ./docker/base-images/qwak-gpu/
           file: ./docker/base-images/qwak-gpu/Dockerfile
           push: true
-          tags: galrabin/qwak:${{ env.QWAK-VERSION }}-gpu
+          tags: qwakai/qwak:${{ env.QWAK-VERSION }}-gpu
 
 
   docker-qwak-slim-base:
@@ -87,4 +88,4 @@ jobs:
           context: ./docker/base-images/qwak-slim/
           file: ./docker/base-images/qwak-slim/Dockerfile
           push: true
-          tags: galrabin/qwak:${{ env.QWAK-VERSION }}-slim
+          tags: qwakai/qwak:${{ env.QWAK-VERSION }}-slim
