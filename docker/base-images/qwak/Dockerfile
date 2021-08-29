@@ -10,3 +10,4 @@ RUN apt-get --allow-releaseinfo-change update && apt-get install --no-install-re
 # Conda env setup
 ENV PYTHONDONTWRITEBYTECODE=true
 RUN conda update conda
+RUN pip install poetry2conda
