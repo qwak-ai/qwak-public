@@ -1,4 +1,4 @@
-FROM bentoml/model-server:latest-slim-py39
+FROM bentoml/model-server:latest-slim-py38
 
 # OS requirements
 # hadolint ignore=DL3008
