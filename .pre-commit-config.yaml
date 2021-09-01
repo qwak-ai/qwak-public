@@ -6,7 +6,3 @@ repos:
     -   id: check-yaml
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
-- repo: https://github.com/hadolint/hadolint
-  rev: v2.6.0
-  hooks:
-    - id: hadolint-docker
