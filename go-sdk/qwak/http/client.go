@@ -30,7 +30,7 @@ func DoRequest(client Client, request *http.Request) (responseBody []byte, httpC
 		return nil, 0, (fmt.Errorf("an error occured on authentication request: %v", err.Error()))
 	}
 	defer response.Body.Close()
-	
+
 	body, err := ioutil.ReadAll(response.Body)
 
 	if err != nil {
