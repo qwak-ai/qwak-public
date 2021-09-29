@@ -2,11 +2,12 @@ FROM continuumio/miniconda3:4.10.3
 
 # OS requirements
 # hadolint ignore=DL3008
-RUN apt-get --allow-releaseinfo-change update && apt-get install --no-install-recommends -y \
+RUN apt-get update && apt-get install --no-install-recommends -y \
   git \
   zip \
   curl \
   python3-dev \
+  build-essential \
   && rm -rf /var/lib/apt/lists/*
 
 # Install poetry
