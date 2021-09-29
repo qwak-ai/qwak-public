@@ -6,6 +6,7 @@ RUN apt-get --allow-releaseinfo-change update && apt-get install --no-install-re
   git \
   zip \
   curl \
+  python3-dev \
   && rm -rf /var/lib/apt/lists/*
 
 # Install poetry
