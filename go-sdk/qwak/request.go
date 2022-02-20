@@ -19,13 +19,13 @@ func NewPredictionRequest(modelId string) *PredictionRequest {
 	return &PredictionRequest{ModelId: modelId}
 }
 
-// AddFeaturesVector adding a new feature vector to your prediction request using fluent API
+// AddFeatureVector adding a new feature vector to your prediction request using fluent API
 func (ir *PredictionRequest) AddFeatureVector(featureVector *FeatureVector) *PredictionRequest {
 	ir.featuresVector = append(ir.featuresVector, featureVector)
 	return ir
 }
 
-// AddFeaturesVectors adding many new feature vector to your prediction request using fluent API
+// AddFeatureVectors adding many new feature vector to your prediction request using fluent API
 func (ir *PredictionRequest) AddFeatureVectors(featuresVector ...*FeatureVector) *PredictionRequest {
 	ir.featuresVector = append(ir.featuresVector, featuresVector...)
 	return ir
@@ -112,7 +112,7 @@ type PredictionResult struct {
 }
 
 // GetValueAsInt returning the value of column in a result converted to int.
-// If convertion failed, an error returned
+// If conversion failed, an error returned
 func (pr *PredictionResult) GetValueAsInt(columnName string) (int, error) {
 	value, ok := pr.valuesMap[columnName]
 
@@ -129,8 +129,8 @@ func (pr *PredictionResult) GetValueAsInt(columnName string) (int, error) {
 	return int(parsedValue), nil
 }
 
-// GetValueAsInt returning the value of column in a result converted to float.
-// If convertion failed, an error returned
+// GetValueAsFloat returning the value of column in a result converted to float.
+// If conversion failed, an error returned
 func (pr *PredictionResult) GetValueAsFloat(columnName string) (float64, error) {
 	value, ok := pr.valuesMap[columnName]
 
@@ -147,8 +147,8 @@ func (pr *PredictionResult) GetValueAsFloat(columnName string) (float64, error) 
 	return parsedValue, nil
 }
 
-// GetValueAsInt returning the value of column in a result converted to string.
-// If convertion failed, an error returned
+// GetValueAsString returning the value of column in a result converted to string.
+// If conversion failed, an error returned
 func (pr *PredictionResult) GetValueAsString(columnName string) (string, error) {
 	value, ok := pr.valuesMap[columnName]
 
@@ -165,7 +165,48 @@ func (pr *PredictionResult) GetValueAsString(columnName string) (string, error) 
 	return parsedValue, nil
 }
 
-// FeatureVector represnts a vector of features with their name and value
+// GetValueAsArrayOfStrings returning the value of column in a result converted to array of strings.
+// If conversion failed, an error returned
+func (pr *PredictionResult) GetValueAsArrayOfStrings(columnName string) ([]string, error) {
+	value, ok := pr.valuesMap[columnName]
+
+	if !ok {
+		return nil, errors.New("column is not exists")
+	}
+
+	parsedValue, ok := value.([]interface{})
+
+	if !ok {
+		return nil, errors.New("column value is not an array")
+	}
+
+	var result []string
+
+	for idx, val := range parsedValue {
+		parsedString, ok := val.(string)
+
+		if !ok {
+			return nil, fmt.Errorf("the value of %s with index %d is not a string", columnName, idx)
+		}
+
+		result = append(result, parsedString)
+	}
+
+	return result, nil
+}
+
+// GetValueAsInterface returning the value of column in a result without any conversion
+func (pr *PredictionResult) GetValueAsInterface(columnName string) (interface{}, error) {
+	value, ok := pr.valuesMap[columnName]
+
+	if !ok {
+		return nil, errors.New("column is not exists")
+	}
+
+	return value, nil
+}
+
+// FeatureVector represents a vector of features with their name and value
 type FeatureVector struct {
 	features []*feature
 }
