@@ -8,6 +8,8 @@ on:
     branches:
       - 'main'
 
+  workflow_dispatch:
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
@@ -18,8 +20,6 @@ jobs:
 
   docker-qwak-base:
     runs-on: ubuntu-latest
-    env:
-      QWAK-VERSION: 0.8.121
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -35,15 +35,20 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          context: ./docker/base-images/qwak/
-          file: ./docker/base-images/qwak/Dockerfile
+          context: ./docker/base-images/qwak/py37
+          file: ./docker/base-images/qwak/py37/Dockerfile
           push: true
-          tags: galrabin/qwak:${{ env.QWAK-VERSION }}-py38-gpu,galrabin/qwak:latest-py38
+          tags: qwakai/qwak:py37
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./docker/base-images/qwak/py38
+          file: ./docker/base-images/qwak/py38/Dockerfile
+          push: true
+          tags: qwakai/qwak:py38
 
   docker-qwak-gpu-base:
     runs-on: ubuntu-latest
-    env:
-      QWAK-VERSION: 0.8.121
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -59,16 +64,28 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          context: ./docker/base-images/qwak-gpu/
-          file: ./docker/base-images/qwak-gpu/Dockerfile
+          context: ./docker/base-images/qwak-gpu/py37
+          file: ./docker/base-images/qwak-gpu/py37/Dockerfile
           push: true
-          tags: galrabin/qwak:${{ env.QWAK-VERSION }}-gpu
+          tags: qwakai/qwak:gpu-py37
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./docker/base-images/qwak-gpu/py38
+          file: ./docker/base-images/qwak-gpu/py38/Dockerfile
+          push: true
+          tags: qwakai/qwak:gpu-py38
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./docker/base-images/qwak-gpu/py39
+          file: ./docker/base-images/qwak-gpu/py39/Dockerfile
+          push: true
+          tags: qwakai/qwak:gpu-py39
 
 
   docker-qwak-slim-base:
     runs-on: ubuntu-latest
-    env:
-      QWAK-VERSION: 0.8.121
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -84,7 +101,21 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          context: ./docker/base-images/qwak-slim/
-          file: ./docker/base-images/qwak-slim/Dockerfile
+          context: ./docker/base-images/qwak-slim/py37
+          file: ./docker/base-images/qwak-slim/py37/Dockerfile
           push: true
-          tags: galrabin/qwak:${{ env.QWAK-VERSION }}-slim
+          tags: qwakai/qwak:slim-py37
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./docker/base-images/qwak-slim/py38
+          file: ./docker/base-images/qwak-slim/py38/Dockerfile
+          push: true
+          tags: qwakai/qwakslim-py38
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./docker/base-images/qwak-slim/py38
+          file: ./docker/base-images/qwak-slim/py39/Dockerfile
+          push: true
+          tags: qwakai/qwak:slim-py39
